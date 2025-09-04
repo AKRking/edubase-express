@@ -259,7 +259,7 @@ const Checkout = () => {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Enter your full name"
-                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+
                   required
                 />
               </div>
@@ -273,7 +273,7 @@ const Checkout = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="your.email@example.com"
-                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+
                   required
                 />
               </div>
@@ -287,7 +287,7 @@ const Checkout = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="+880 1XX XXX XXXX"
-                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+
                   required
                 />
               </div>
@@ -300,7 +300,7 @@ const Checkout = () => {
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="Enter your full address"
-                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+
                   required
                 />
               </div>
@@ -313,7 +313,7 @@ const Checkout = () => {
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="Enter your city"
-                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+
                   required
                 />
               </div>
