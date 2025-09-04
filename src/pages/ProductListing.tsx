@@ -250,12 +250,12 @@ const ProductListing = () => {
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-8">
               {/* Product Gallery */}
-              <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+              <div>
                 <ProductGallery categoryInfo={categoryInfo} />
               </div>
 
               {/* Subject Filter */}
-              <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+              <div>
                 <SubjectFilter
                   subjects={subjectOptions}
                   selectedSubject={selectedSubject}
@@ -286,7 +286,7 @@ const ProductListing = () => {
             </div>
 
             {/* Subject Cards */}
-            <div className="space-y-8 mb-20">
+            <div className="space-y-4 mb-20">
               {filteredSubjects.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-muted-foreground mb-4">No subjects found for the selected filter</div>
@@ -299,9 +299,9 @@ const ProductListing = () => {
                 </div>
               ) : (
                 filteredSubjects.map((subject) => (
-                  <div key={subject.id} className="bg-card rounded-xl border border-border p-6 shadow-card">
+                  <div key={subject.id} className="py-3">
                     {/* Subject Header */}
-                    <div className="mb-6">
+                    <div className="mb-3">
                       <div className="flex items-center gap-3 mb-2">
                         <h2 className="font-display font-bold text-xl text-card-foreground">
                           {subject.title}
@@ -322,11 +322,11 @@ const ProductListing = () => {
                     </div>
 
                     {/* Papers Selection */}
-                    <div className="space-y-3">
+                    <div className="space-y-1">
                       {subject.papers.map((paper) => (
                         <label 
                           key={paper.id} 
-                          className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer transition-smooth group"
+                          className="flex items-center gap-3 py-2 cursor-pointer transition-smooth group"
                         >
                           <input
                             type="checkbox"
@@ -358,12 +358,12 @@ const ProductListing = () => {
 
       {/* Fixed Selection Summary - Updated functionality */}
       {totalItems > 0 && (
-        <div className="fixed bottom-6 right-6 bg-card rounded-xl border border-border shadow-card-lg p-6 max-w-sm z-50">
+        <div className="fixed bottom-6 right-6 bg-background border border-border p-4 max-w-sm z-50">
           <h3 className="font-display font-semibold text-lg mb-4">
             Selected Items ({totalItems})
           </h3>
           
-          <div className="space-y-2 max-h-40 overflow-y-auto mb-4">
+          <div className="space-y-1 max-h-40 overflow-y-auto mb-3">
             {selectedPapers.map((paper) => (
               <div key={paper.id} className="flex justify-between items-center text-sm">
                 <span className="truncate text-card-foreground">{paper.code}</span>
@@ -372,7 +372,7 @@ const ProductListing = () => {
             ))}
           </div>
           
-          <div className="border-t border-border pt-4 space-y-3">
+          <div className="border-t border-border pt-3 space-y-2">
             <div className="flex justify-between items-center font-display font-bold text-lg">
               <span>Total</span>
               <span className="text-primary">৳{totalPrice}</span>
