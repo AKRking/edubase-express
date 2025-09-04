@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import ProductGallery from "@/components/ProductGallery";
+import SubjectFilter from "@/components/SubjectFilter";
 import { ChevronRight, Star, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -122,6 +124,7 @@ const ProductListing = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [selectedPapers, setSelectedPapers] = useState<Paper[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   // Parse the category from the slug
   const getCategoryInfo = (slug: string | undefined) => {
@@ -140,6 +143,21 @@ const ProductListing = () => {
   };
 
   const categoryInfo = getCategoryInfo(slug);
+
+  // Filter subjects based on selected filter
+  const filteredSubjects = useMemo(() => {
+    if (!selectedSubject) return mockSubjects;
+    return mockSubjects.filter(subject => subject.code === selectedSubject);
+  }, [selectedSubject]);
+
+  // Extract unique subjects for filter
+  const subjectOptions = useMemo(() => {
+    return mockSubjects.map(subject => ({
+      id: subject.id,
+      title: subject.title,
+      code: subject.code
+    }));
+  }, []);
 
   const handlePaperSelection = (paper: Paper, isSelected: boolean) => {
     if (isSelected) {
@@ -181,77 +199,119 @@ const ProductListing = () => {
           </span>
         </nav>
 
-        {/* Category Header */}
-        <div className="mb-12">
-          <h1 className="font-display font-bold text-3xl sm:text-4xl text-foreground mb-4">
-            {categoryInfo.board} {categoryInfo.level}
-          </h1>
-          <p className="text-lg text-muted-foreground mb-2">
-            {categoryInfo.type}
-          </p>
-          <p className="text-muted-foreground">
-            Select the materials you need from our comprehensive collection
-          </p>
-        </div>
-
-        {/* Subject Cards */}
-        <div className="space-y-8 mb-20">
-          {mockSubjects.map((subject) => (
-            <div key={subject.id} className="bg-card rounded-xl border border-border p-6 shadow-card">
-              {/* Subject Header */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="font-display font-bold text-xl text-card-foreground">
-                    {subject.title}
-                  </h2>
-                  {subject.status && (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      subject.status === 'Current' 
-                        ? 'bg-success/10 text-success' 
-                        : 'bg-warning/10 text-warning'
-                    }`}>
-                      {subject.status}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground italic">
-                  {subject.description}
-                </p>
+        {/* 2-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column - Sticky */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-24 space-y-8">
+              {/* Product Gallery */}
+              <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+                <ProductGallery categoryInfo={categoryInfo} />
               </div>
 
-              {/* Papers Selection */}
-              <div className="space-y-3">
-                {subject.papers.map((paper) => (
-                  <label 
-                    key={paper.id} 
-                    className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer transition-smooth group"
-                  >
-                    <input
-                      type="checkbox"
-                      value={paper.id}
-                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-offset-2"
-                      onChange={(e) => handlePaperSelection(paper, e.target.checked)}
-                    />
-                    <div className="flex-1 flex items-center gap-3">
-                      <span className="text-sm font-medium text-card-foreground group-hover:text-primary transition-smooth">
-                        {paper.code}
-                      </span>
-                      {paper.isPopular && (
-                        <Star className="w-4 h-4 text-warning fill-warning" />
-                      )}
-                    </div>
-                    <span className="text-sm font-semibold text-card-foreground">
-                      (+৳ {paper.price})
-                    </span>
-                  </label>
-                ))}
+              {/* Subject Filter */}
+              <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+                <SubjectFilter
+                  subjects={subjectOptions}
+                  selectedSubject={selectedSubject}
+                  onSubjectSelect={setSelectedSubject}
+                />
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Right Column - Scrollable Content */}
+          <div className="lg:col-span-8">
+            {/* Category Header */}
+            <div className="mb-8">
+              <h1 className="font-display font-bold text-3xl sm:text-4xl text-foreground mb-4">
+                {categoryInfo.board} {categoryInfo.level}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-2">
+                {categoryInfo.type}
+              </p>
+              <p className="text-muted-foreground">
+                Select the materials you need from our comprehensive collection
+                {selectedSubject && (
+                  <span className="ml-2 text-primary font-medium">
+                    (Filtered by: {subjectOptions.find(s => s.code === selectedSubject)?.title})
+                  </span>
+                )}
+              </p>
+            </div>
+
+            {/* Subject Cards */}
+            <div className="space-y-8 mb-20">
+              {filteredSubjects.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-muted-foreground mb-4">No subjects found for the selected filter</div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedSubject(null)}
+                  >
+                    Clear Filter
+                  </Button>
+                </div>
+              ) : (
+                filteredSubjects.map((subject) => (
+                  <div key={subject.id} className="bg-card rounded-xl border border-border p-6 shadow-card">
+                    {/* Subject Header */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="font-display font-bold text-xl text-card-foreground">
+                          {subject.title}
+                        </h2>
+                        {subject.status && (
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            subject.status === 'Current' 
+                              ? 'bg-success/10 text-success' 
+                              : 'bg-warning/10 text-warning'
+                          }`}>
+                            {subject.status}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground italic">
+                        {subject.description}
+                      </p>
+                    </div>
+
+                    {/* Papers Selection */}
+                    <div className="space-y-3">
+                      {subject.papers.map((paper) => (
+                        <label 
+                          key={paper.id} 
+                          className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer transition-smooth group"
+                        >
+                          <input
+                            type="checkbox"
+                            value={paper.id}
+                            className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-offset-2"
+                            onChange={(e) => handlePaperSelection(paper, e.target.checked)}
+                          />
+                          <div className="flex-1 flex items-center gap-3">
+                            <span className="text-sm font-medium text-card-foreground group-hover:text-primary transition-smooth">
+                              {paper.code}
+                            </span>
+                            {paper.isPopular && (
+                              <Star className="w-4 h-4 text-warning fill-warning" />
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-card-foreground">
+                            (+৳ {paper.price})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Fixed Selection Summary */}
+      {/* Fixed Selection Summary - Unchanged functionality */}
       {totalItems > 0 && (
         <div className="fixed bottom-6 right-6 bg-card rounded-xl border border-border shadow-card-lg p-6 max-w-sm z-50">
           <h3 className="font-display font-semibold text-lg mb-4">
