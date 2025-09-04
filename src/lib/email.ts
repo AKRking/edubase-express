@@ -35,14 +35,21 @@ export interface OrderEmailData {
 
 // Send admin notification email
 export async function sendAdminOrderNotification(orderData: OrderEmailData) {
+  if (!RESEND_API_KEY) {
+    console.error('VITE_RESEND_API_KEY not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
   try {
+    console.log('Sending admin notification email...');
+    
     const itemsList = orderData.items.map(item => 
       `• ${item.item_code} - ${item.subject} (${item.board} ${item.level}) - ৳${item.price}`
     ).join('\n');
 
     const { data, error } = await resend.emails.send({
-      from: 'EduMaterials <orders@edumaterials.com>',
-      to: ['djbox9@gmail.com'],
+      from: 'EduMaterials <onboarding@resend.dev>',
+      to: ['djbxo9@gmail.com'],
       subject: `🔔 New Order: ${orderData.orderNumber}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -92,6 +99,7 @@ ${itemsList}
       throw error;
     }
 
+    console.log('Admin notification email sent successfully:', data);
     return { success: true, data };
   } catch (error) {
     console.error('Failed to send admin notification:', error);
