@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Header from "@/components/Header";
+import { getOrderByNumber } from "@/lib/supabase";
 import { CheckCircle, Download, Mail, ArrowLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,17 @@ const SuccessPage = () => {
   useEffect(() => {
     if (!orderData) {
       navigate('/');
+    } else {
+      // Optionally verify order exists in database
+      const verifyOrder = async () => {
+        if (orderData.orderNumber) {
+          const result = await getOrderByNumber(orderData.orderNumber);
+          if (!result.success) {
+            console.warn('Order verification failed:', result.error);
+          }
+        }
+      };
+      verifyOrder();
     }
   }, [orderData, navigate]);
 

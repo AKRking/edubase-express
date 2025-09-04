@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
+import { createOrder } from "@/lib/supabase";
 import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,8 +108,41 @@ const Checkout = () => {
     setIsProcessing(true);
     
     try {
-      // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}`;
+      
+      // Prepare order data for Supabase
+      const orderData = {
+        orderNumber,
+        customerInfo: formData,
+        paymentMethod: paymentMethods.find(p => p.id === selectedPaymentMethod)?.name || selectedPaymentMethod,
+        subtotal: getTotalPrice(),
+        deliveryCharge,
+        totalAmount,
+        items: items.map(item => ({
+          code: item.code,
+          subject: item.subject,
+          board: item.board,
+          level: item.level,
+          type: item.type,
+          yearRange: item.yearRange,
+          component: item.component,
+          price: item.price
+        }))
+      };
+
+      // Create order in Supabase
+      const result = await createOrder(orderData);
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to create order');
+      }
+
+      // Show success toast
+      toast({
+        title: "Order Created Successfully!",
+        description: `Order ${orderNumber} has been placed`,
+      });
       
       // Navigate to success page with order data
       navigate('/success-page', {
@@ -120,16 +154,18 @@ const Checkout = () => {
             subtotal: getTotalPrice(),
             deliveryCharge,
             total: totalAmount,
-            orderNumber: `ORD-${Date.now()}`
+            orderNumber,
+            orderId: result.order.id
           }
         }
       });
       
       clearCart();
     } catch (error) {
+      console.error('Order creation failed:', error);
       toast({
         title: "Order Failed",
-        description: "Please try again or contact support",
+        description: error instanceof Error ? error.message : "Please try again or contact support",
         variant: "destructive"
       });
     } finally {
