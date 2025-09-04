@@ -188,26 +188,23 @@ const Checkout = () => {
                 Order Summary
               </h2>
               
-              {/* Items List - Reduced padding, no boxes */}
-              <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
+              {/* Items List - Concise, no padding, no scrolls */}
+              <div className="space-y-1 mb-3">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3 py-2">
+                  <div key={item.id} className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-foreground">
+                      <p className="font-medium text-xs text-foreground">
                         {item.code}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {item.subject} • {item.yearRange}
-                      </p>
-                      <p className="text-sm font-semibold text-primary">
-                        ৳{item.price}
+                        {item.subject} • ৳{item.price}
                       </p>
                     </div>
                     <button
                       onClick={() => handleRemoveItem(item.id)}
-                      className="p-1 bg-red-100 border-2 border-red-500 shadow-[2px_2px_0px_0px_rgba(239,68,68,1)] hover:shadow-[1px_1px_0px_0px_rgba(239,68,68,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 rounded text-red-600"
+                      className="text-red-600 hover:text-red-800 text-sm"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      ×
                     </button>
                   </div>
                 ))}
@@ -327,35 +324,37 @@ const Checkout = () => {
             </h2>
             
             {/* Payment Methods */}
-            <div className="space-y-3 mb-6">
-              {paymentMethods.map((method) => (
-                <div key={method.id}>
-                  <button
-                    onClick={() => handlePaymentMethodSelect(method.id)}
-                    className={`w-full p-4 text-left border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 rounded-lg font-medium ${
-                      selectedPaymentMethod === method.id 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-white text-foreground'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{method.name}</span>
-                      {selectedPaymentMethod === method.id && showPaymentDetails ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </div>
-                  </button>
-                  
-                  {/* Payment Details */}
-                  {selectedPaymentMethod === method.id && showPaymentDetails && (
-                    <div className="mt-2 p-3 bg-gray-50 border-2 border-gray-300 rounded-lg">
-                      <p className="text-sm text-gray-700">{method.details}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="border border-gray-300 rounded-lg p-4 mb-6">
+              <div className="space-y-3">
+                {paymentMethods.map((method) => (
+                  <div key={method.id}>
+                    <button
+                      onClick={() => handlePaymentMethodSelect(method.id)}
+                      className={`w-full p-3 text-left rounded-lg font-medium transition-all duration-150 ${
+                        selectedPaymentMethod === method.id 
+                          ? 'border-2 border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-500' 
+                          : 'border-2 border-gray-400 bg-white text-gray-600 opacity-90 ring-2 ring-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{method.name}</span>
+                        {selectedPaymentMethod === method.id && showPaymentDetails ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </div>
+                    </button>
+                    
+                    {/* Payment Details */}
+                    {selectedPaymentMethod === method.id && showPaymentDetails && (
+                      <div className="mt-2 p-3 bg-gray-50 border border-gray-300 rounded-lg">
+                        <p className="text-sm text-gray-700">{method.details}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Security Info */}
