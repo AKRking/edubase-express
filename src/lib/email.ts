@@ -95,5 +95,3 @@ ${itemsList}
     return { success: false, error };
   }
 }
-
-}
