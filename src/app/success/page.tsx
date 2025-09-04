@@ -1,44 +1,77 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+"use client";
+
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { getOrderByNumber } from "@/lib/supabase";
 import { CheckCircle, Download, Mail, ArrowLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const SuccessPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+export default function SuccessPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
-  const orderData = location.state?.orderData;
+  const orderNumber = searchParams.get('orderNumber');
+  const [orderData, setOrderData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderData) {
-      navigate('/');
-    } else {
-      // Optionally verify order exists in database
-      const verifyOrder = async () => {
-        if (orderData.orderNumber) {
-          const result = await getOrderByNumber(orderData.orderNumber);
-          if (!result.success) {
-            console.warn('Order verification failed:', result.error);
-          }
-        }
-      };
-      verifyOrder();
+    if (!orderNumber) {
+      router.push('/');
+      return;
     }
-  }, [orderData, navigate]);
+
+    const fetchOrder = async () => {
+      try {
+        const result = await getOrderByNumber(orderNumber);
+        if (result.success && result.order) {
+          setOrderData(result.order);
+        } else {
+          console.error('Order not found:', result.error);
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('Error fetching order:', error);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderNumber, router]);
 
   const copyOrderNumber = () => {
-    navigator.clipboard.writeText(orderData.orderNumber);
-    toast({
-      title: "Copied!",
-      description: "Order number copied to clipboard",
-    });
+    if (orderNumber) {
+      navigator.clipboard.writeText(orderNumber);
+      toast({
+        title: "Copied!",
+        description: "Order number copied to clipboard",
+      });
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="text-lg">Loading order details...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!orderData) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="text-lg">Order not found</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -68,7 +101,7 @@ const SuccessPage = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Order Number:</span>
                 <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border-2 border-gray-300">
-                  {orderData.orderNumber}
+                  {orderData.order_number}
                 </span>
                 <button
                   onClick={copyOrderNumber}
@@ -79,19 +112,19 @@ const SuccessPage = () => {
               </div>
               <div>
                 <span className="text-sm font-medium">Payment Method: </span>
-                <span className="text-sm">{orderData.paymentMethod}</span>
+                <span className="text-sm">{orderData.payment_method}</span>
               </div>
               <div>
                 <span className="text-sm font-medium">Customer: </span>
-                <span className="text-sm">{orderData.customerInfo.fullName}</span>
+                <span className="text-sm">{orderData.customer_name}</span>
               </div>
               <div>
                 <span className="text-sm font-medium">Email: </span>
-                <span className="text-sm">{orderData.customerInfo.email}</span>
+                <span className="text-sm">{orderData.customer_email}</span>
               </div>
               <div>
                 <span className="text-sm font-medium">Address: </span>
-                <span className="text-sm">{orderData.customerInfo.address}, {orderData.customerInfo.city}</span>
+                <span className="text-sm">{orderData.customer_address}, {orderData.customer_city}</span>
               </div>
             </div>
           </div>
@@ -100,9 +133,9 @@ const SuccessPage = () => {
           <div>
             <h2 className="font-display font-semibold text-xl mb-4">Order Summary</h2>
             <div className="space-y-2">
-              {orderData.items.map((item: any) => (
-                <div key={item.id} className="flex justify-between text-sm py-1">
-                  <span className="truncate mr-2">{item.code}</span>
+              {orderData.order_items?.map((item: any, index: number) => (
+                <div key={index} className="flex justify-between text-sm py-1">
+                  <span className="truncate mr-2">{item.item_code}</span>
                   <span>৳{item.price}</span>
                 </div>
               ))}
@@ -113,11 +146,11 @@ const SuccessPage = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Delivery</span>
-                  <span>{orderData.deliveryCharge === 0 ? "Free" : `৳${orderData.deliveryCharge}`}</span>
+                  <span>{orderData.delivery_charge === 0 ? "Free" : `৳${orderData.delivery_charge}`}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-primary">৳{orderData.total}</span>
+                  <span className="text-primary">৳{orderData.total_amount}</span>
                 </div>
               </div>
             </div>
@@ -141,7 +174,7 @@ const SuccessPage = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
             className="px-6 py-3 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 rounded-lg font-medium"
           >
             <ArrowLeft className="w-4 h-4 mr-2 inline" />
@@ -159,6 +192,4 @@ const SuccessPage = () => {
       </div>
     </div>
   );
-};
-
-export default SuccessPage;
+}

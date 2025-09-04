@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { BookOpen, FileText, GraduationCap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 interface SyllabusButtonProps {
   title: string;
@@ -12,7 +12,7 @@ interface SyllabusButtonProps {
 }
 
 const SyllabusButton = ({ title, slug, board, level, type, className }: SyllabusButtonProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const getIcon = () => {
     if (type === "question-papers") {
@@ -26,7 +26,7 @@ const SyllabusButton = ({ title, slug, board, level, type, className }: Syllabus
   };
 
   const handleClick = () => {
-    navigate(`/products/${slug}`);
+    router.push(`/products/${slug}`);
   };
 
   return (

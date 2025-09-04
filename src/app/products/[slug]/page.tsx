@@ -1,5 +1,8 @@
+"use client";
+
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Header from "@/components/Header";
 import ProductGallery from "@/components/ProductGallery";
 import SubjectFilter from "@/components/SubjectFilter";
@@ -122,9 +125,10 @@ const mockSubjects: Subject[] = [
   }
 ];
 
-const ProductListing = () => {
-  const { slug } = useParams();
-  const navigate = useNavigate();
+export default function ProductListing() {
+  const params = useParams();
+  const router = useRouter();
+  const slug = params.slug as string;
   const addItems = useCartStore((state) => state.addItems);
   const { toast } = useToast();
   const [selectedPapers, setSelectedPapers] = useState<Paper[]>([]);
@@ -194,12 +198,6 @@ const ProductListing = () => {
     // Add to cart
     addItems(cartItems);
 
-    // Show success toast
-    // toast({
-    //   title: "Added to Cart!",
-    //   description: `${selectedPapers.length} item${selectedPapers.length > 1 ? 's' : ''} added successfully`,
-    // });
-
     // Clear current selection
     setSelectedPapers([]);
     
@@ -216,8 +214,8 @@ const ProductListing = () => {
   const handleGoToCheckout = () => {
     // Hide the checkout button
     setShowCheckoutButton(false);
-    // Navigate to checkout page (to be implemented)
-    navigate('/checkout');
+    // Navigate to checkout page
+    router.push('/checkout');
   };
 
   if (!categoryInfo) {
@@ -232,7 +230,7 @@ const ProductListing = () => {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
           <button 
-            onClick={() => navigate('/')} 
+            onClick={() => router.back()} 
             className="hover:text-primary transition-smooth flex items-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -428,6 +426,4 @@ const ProductListing = () => {
       )}
     </div>
   );
-};
-
-export default ProductListing;
+}

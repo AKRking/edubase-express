@@ -1,16 +1,18 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
-import { createOrder } from "@/lib/supabase";
+import { createOrderAction } from "@/lib/actions";
 import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const Checkout = () => {
-  const navigate = useNavigate();
+export default function Checkout() {
+  const router = useRouter();
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
@@ -111,7 +113,7 @@ const Checkout = () => {
       // Generate order number
       const orderNumber = `ORD-${Date.now()}`;
       
-      // Prepare order data for Supabase
+      // Prepare order data for server action
       const orderData = {
         orderNumber,
         customerInfo: formData,
@@ -131,11 +133,11 @@ const Checkout = () => {
         }))
       };
 
-      // Create order in Supabase
-      const result = await createOrder(orderData);
+      // Create order using server action
+      const result = await createOrderAction(orderData);
       
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to create order');
+        throw new Error(result.error || 'Failed to create order');
       }
 
       // Show success toast
@@ -145,20 +147,7 @@ const Checkout = () => {
       });
       
       // Navigate to success page with order data
-      navigate('/success-page', {
-        state: {
-          orderData: {
-            items,
-            customerInfo: formData,
-            paymentMethod: paymentMethods.find(p => p.id === selectedPaymentMethod)?.name,
-            subtotal: getTotalPrice(),
-            deliveryCharge,
-            total: totalAmount,
-            orderNumber,
-            orderId: result.order.id
-          }
-        }
-      });
+      router.push(`/success?orderNumber=${orderNumber}`);
       
       clearCart();
     } catch (error) {
@@ -185,7 +174,7 @@ const Checkout = () => {
             <p className="text-muted-foreground mb-6">
               Add some educational materials to your cart to proceed with checkout
             </p>
-            <Button onClick={() => navigate('/')} className="bg-gradient-primary">
+            <Button onClick={() => router.push('/')} className="bg-gradient-primary">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Continue Shopping
             </Button>
@@ -203,7 +192,7 @@ const Checkout = () => {
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
             className="p-2 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -295,7 +284,6 @@ const Checkout = () => {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Enter your full name"
-
                   required
                 />
               </div>
@@ -309,7 +297,6 @@ const Checkout = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="your.email@example.com"
-
                   required
                 />
               </div>
@@ -323,7 +310,6 @@ const Checkout = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="+880 1XX XXX XXXX"
-
                   required
                 />
               </div>
@@ -336,7 +322,6 @@ const Checkout = () => {
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="Enter your full address"
-
                   required
                 />
               </div>
@@ -349,7 +334,6 @@ const Checkout = () => {
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="Enter your city"
-
                   required
                 />
               </div>
@@ -426,6 +410,4 @@ const Checkout = () => {
       </div>
     </div>
   );
-};
-
-export default Checkout;
+}

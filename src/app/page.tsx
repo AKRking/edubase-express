@@ -77,7 +77,7 @@ const stats = [
   { icon: TrendingUp, label: "Students", value: "10,000+" }
 ];
 
-const Index = () => {
+export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -173,6 +173,4 @@ const Index = () => {
       </footer>
     </div>
   );
-};
-
-export default Index;
+}
