@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import ProductGallery from "@/components/ProductGallery";
 import SubjectFilter from "@/components/SubjectFilter";
-import { ChevronRight, Star, ArrowLeft } from "lucide-react";
+import { useCart, CartItem } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
+import { ChevronRight, Star, ArrowLeft, ShoppingCart, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Paper {
@@ -123,8 +125,11 @@ const mockSubjects: Subject[] = [
 const ProductListing = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { addItems } = useCart();
+  const { toast } = useToast();
   const [selectedPapers, setSelectedPapers] = useState<Paper[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [showCheckoutButton, setShowCheckoutButton] = useState(false);
 
   // Parse the category from the slug
   const getCategoryInfo = (slug: string | undefined) => {
@@ -171,8 +176,48 @@ const ProductListing = () => {
   const totalItems = selectedPapers.length;
 
   const handleAddToCart = () => {
-    // Navigate to checkout or handle cart logic
-    console.log('Adding to cart:', selectedPapers);
+    if (selectedPapers.length === 0) return;
+
+    // Convert selected papers to cart items
+    const cartItems: CartItem[] = selectedPapers.map(paper => ({
+      id: paper.id,
+      code: paper.code,
+      price: paper.price,
+      subject: mockSubjects.find(s => s.papers.includes(paper))?.title || "Unknown Subject",
+      board: categoryInfo?.board || "Unknown Board",
+      level: categoryInfo?.level || "Unknown Level", 
+      type: categoryInfo?.type || "Unknown Type",
+      yearRange: paper.yearRange,
+      component: paper.component
+    }));
+
+    // Add to cart
+    addItems(cartItems);
+
+    // Show success toast
+    toast({
+      title: "Added to Cart!",
+      description: `${selectedPapers.length} item${selectedPapers.length > 1 ? 's' : ''} added successfully`,
+    });
+
+    // Clear current selection
+    setSelectedPapers([]);
+    
+    // Show checkout button
+    setShowCheckoutButton(true);
+
+    // Clear all checkboxes by triggering a re-render
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });
+  };
+
+  const handleGoToCheckout = () => {
+    // Hide the checkout button
+    setShowCheckoutButton(false);
+    // Navigate to checkout page (to be implemented)
+    navigate('/checkout');
   };
 
   if (!categoryInfo) {
@@ -311,7 +356,7 @@ const ProductListing = () => {
         </div>
       </div>
 
-      {/* Fixed Selection Summary - Unchanged functionality */}
+      {/* Fixed Selection Summary - Updated functionality */}
       {totalItems > 0 && (
         <div className="fixed bottom-6 right-6 bg-card rounded-xl border border-border shadow-card-lg p-6 max-w-sm z-50">
           <h3 className="font-display font-semibold text-lg mb-4">
@@ -327,8 +372,8 @@ const ProductListing = () => {
             ))}
           </div>
           
-          <div className="border-t border-border pt-4">
-            <div className="flex justify-between items-center font-display font-bold text-lg mb-4">
+          <div className="border-t border-border pt-4 space-y-3">
+            <div className="flex justify-between items-center font-display font-bold text-lg">
               <span>Total</span>
               <span className="text-primary">৳{totalPrice}</span>
             </div>
@@ -336,9 +381,48 @@ const ProductListing = () => {
               onClick={handleAddToCart}
               className="w-full bg-gradient-primary hover:opacity-90 text-white font-medium"
               size="lg"
+              disabled={totalItems === 0}
             >
+              <ShoppingCart className="w-4 h-4 mr-2" />
               Add to Cart
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Go to Checkout Button - Appears after adding to cart */}
+      {showCheckoutButton && (
+        <div className="fixed bottom-6 right-6 bg-warning rounded-xl border border-warning/20 shadow-card-lg p-6 max-w-sm z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 bg-warning/10 rounded-full flex items-center justify-center mx-auto">
+              <CreditCard className="w-6 h-6 text-warning-foreground" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-lg text-warning-foreground mb-1">
+                Ready to Checkout?
+              </h3>
+              <p className="text-sm text-warning-foreground/80">
+                Items added to your cart successfully
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleGoToCheckout}
+                className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-medium"
+                size="lg"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Go to Checkout
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowCheckoutButton(false)}
+                className="w-full text-warning-foreground/70 hover:text-warning-foreground"
+              >
+                Continue Shopping
+              </Button>
+            </div>
           </div>
         </div>
       )}

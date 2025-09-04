@@ -1,7 +1,9 @@
 import { BookOpen, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/CartContext";
 
 const Header = () => {
+  const { getTotalItems } = useCart();
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,9 +40,11 @@ const Header = () => {
           <Button variant="outline" size="sm" className="relative">
             <ShoppingCart className="w-4 h-4" />
             <span className="ml-2 hidden sm:inline">Cart</span>
-            <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-              0
-            </span>
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                {getTotalItems()}
+              </span>
+            )}
           </Button>
         </div>
       </div>
