@@ -1,11 +1,14 @@
 // Note: In production, email sending should be done server-side
 // For now, we'll use fetch to call Resend API directly
+import { Resend } from 'resend';
 
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
 
 if (!RESEND_API_KEY) {
   console.warn('VITE_RESEND_API_KEY not found in environment variables');
 }
+
+const resend = new Resend(RESEND_API_KEY);
 
 export interface OrderEmailData {
   orderNumber: string;
@@ -110,17 +113,11 @@ export async function sendCustomerOrderConfirmation(orderData: OrderEmailData) {
       `• ${item.item_code} - ${item.subject} (${item.board} ${item.level}) - ৳${item.price}`
     ).join('\n');
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'EduMaterials <onboarding@resend.dev>',
-        to: [orderData.customerEmail],
-        subject: `✅ Order Confirmed: ${orderData.orderNumber}`,
-        html: `
+    const { data, error } = await resend.emails.send({
+      from: 'EduMaterials <onboarding@resend.dev>',
+      to: [orderData.customerEmail],
+      subject: `✅ Order Confirmed: ${orderData.orderNumber}`,
+      html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #10b981, #3b82f6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
               <h1 style="color: white; margin: 0; font-size: 24px;">✅ Order Confirmed!</h1>
@@ -162,16 +159,12 @@ ${itemsList}
             </div>
           </div>
         `,
-      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Resend API error:', response.status, errorText);
-      throw new Error(`Resend API error: ${response.status} ${errorText}`);
+    if (error) {
+      throw error;
     }
 
-    const data = await response.json();
     console.log('Customer confirmation email sent successfully:', data);
     return { success: true, data };
   } catch (error) {
