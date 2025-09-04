@@ -22,14 +22,13 @@ export interface Order {
   subtotal: number;
   delivery_charge: number;
   total_amount: number;
+  order_items: OrderItem[];
   status: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface OrderItem {
-  id: string;
-  order_id: string;
   item_code: string;
   subject: string;
   board: string;
@@ -38,7 +37,6 @@ export interface OrderItem {
   year_range: string;
   component: string;
   price: number;
-  created_at: string;
 }
 
 // Order creation function
@@ -67,7 +65,19 @@ export async function createOrder(orderData: {
   }>;
 }) {
   try {
-    // Create the order record
+    // Prepare order items for JSONB storage
+    const orderItemsJson = orderData.items.map(item => ({
+      item_code: item.code,
+      subject: item.subject,
+      board: item.board,
+      level: item.level,
+      type: item.type,
+      year_range: item.yearRange,
+      component: item.component,
+      price: item.price
+    }));
+
+    // Create the order record with items as JSONB
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -81,6 +91,7 @@ export async function createOrder(orderData: {
         subtotal: orderData.subtotal,
         delivery_charge: orderData.deliveryCharge,
         total_amount: orderData.totalAmount,
+        order_items: orderItemsJson,
         status: 'pending'
       })
       .select()
@@ -88,27 +99,6 @@ export async function createOrder(orderData: {
 
     if (orderError) {
       throw orderError;
-    }
-
-    // Create order items
-    const orderItems = orderData.items.map(item => ({
-      order_id: order.id,
-      item_code: item.code,
-      subject: item.subject,
-      board: item.board,
-      level: item.level,
-      type: item.type,
-      year_range: item.yearRange,
-      component: item.component,
-      price: item.price
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) {
-      throw itemsError;
     }
 
     return { success: true, order };
@@ -131,16 +121,7 @@ export async function getOrderByNumber(orderNumber: string) {
       throw orderError;
     }
 
-    const { data: items, error: itemsError } = await supabase
-      .from('order_items')
-      .select('*')
-      .eq('order_id', order.id);
-
-    if (itemsError) {
-      throw itemsError;
-    }
-
-    return { success: true, order, items };
+    return { success: true, order };
   } catch (error) {
     console.error('Error fetching order:', error);
     return { success: false, error };
