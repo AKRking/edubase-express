@@ -49,7 +49,7 @@ export async function sendAdminOrderNotification(orderData: OrderEmailData) {
 
     const { data, error } = await resend.emails.send({
       from: 'EduMaterials <onboarding@resend.dev>',
-      to: ['djbxo9@gmail.com'],
+      to: ['djbox9@gmail.com'],
       subject: `🔔 New Order: ${orderData.orderNumber}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
