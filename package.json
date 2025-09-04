@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "ts-node -r dotenv/config server/index.ts",
+    "dev:server": "ts-node -r dotenv/config server/index.tsx",
     "dev:full": "npm run dev:server & npm run dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
