@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 import { createOrder } from "@/lib/supabase";
-import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
+import { sendOrderEmails } from "@/lib/api";
 import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,7 +140,7 @@ const Checkout = () => {
       }
 
       // Send email notifications
-      console.log('Order created successfully, sending email notifications...');
+      console.log('Order created successfully, sending email notifications via API...');
       
       // Prepare email data
       const emailData = {
@@ -157,38 +157,27 @@ const Checkout = () => {
         items: orderData.items
       };
 
-      // Send admin notification (non-blocking)
-      sendAdminOrderNotification(emailData).then(result => {
+      // Send both emails via API (non-blocking)
+      sendOrderEmails(emailData).then(result => {
         if (result.success) {
-          console.log('Admin notification sent successfully');
-        } else {
-          console.error('Failed to send admin notification:', result.error);
-        }
-      }).catch(error => {
-        console.error('Admin notification error:', error);
-      });
-
-      // Send customer confirmation (non-blocking)
-      sendCustomerOrderConfirmation(emailData).then(result => {
-        if (result.success) {
-          console.log('Customer confirmation sent successfully');
+          console.log('Order emails sent successfully');
           toast({
-            title: "Confirmation Email Sent",
-            description: "Check your email for order details",
+            title: "Emails Sent",
+            description: "Order confirmations sent to admin and customer",
           });
         } else {
-          console.error('Failed to send customer confirmation:', result.error);
+          console.error('Failed to send order emails:', result.error);
           toast({
             title: "Email Warning",
-            description: "Order created but confirmation email failed. Please save your order number.",
+            description: "Order created but emails failed. Please save your order number.",
             variant: "destructive"
           });
         }
       }).catch(error => {
-        console.error('Customer confirmation error:', error);
+        console.error('Order emails error:', error);
         toast({
           title: "Email Warning", 
-          description: "Order created but confirmation email failed. Please save your order number.",
+          description: "Order created but emails failed. Please save your order number.",
           variant: "destructive"
         });
       });
