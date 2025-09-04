@@ -178,9 +178,9 @@ const ProductListing = () => {
   const handleAddToCart = () => {
     if (selectedPapers.length === 0) return;
 
-    // Convert selected papers to cart items
+    // Convert selected papers to cart items with unique IDs
     const cartItems: CartItem[] = selectedPapers.map(paper => ({
-      id: paper.id,
+      id: `${paper.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
       code: paper.code,
       price: paper.price,
       subject: mockSubjects.find(s => s.papers.includes(paper))?.title || "Unknown Subject",
