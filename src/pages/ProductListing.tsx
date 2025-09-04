@@ -408,7 +408,7 @@ const ProductListing = () => {
             <div className="space-y-2">
               <Button 
                 onClick={handleGoToCheckout}
-                className="w-full bg-blue-10 hover:bg-warning/90 text-warning-foreground font-medium"
+                className="w-full hover:bg-red-90 text-warning-foreground font-medium"
                 size="lg"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
