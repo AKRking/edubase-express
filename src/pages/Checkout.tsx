@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CreditCard, Shield, Trash2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +13,16 @@ const Checkout = () => {
   const { items, removeItem, getTotalPrice, clearCart } = useCart();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
-    country: "Bangladesh"
+    address: "",
+    city: ""
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -37,11 +40,62 @@ const Checkout = () => {
     });
   };
 
-  const handleCheckout = async () => {
-    if (!formData.fullName || !formData.email || !formData.phone) {
+  // Calculate delivery charge
+  const calculateDeliveryCharge = () => {
+    const subtotal = getTotalPrice();
+    const isChittagong = formData.address.toLowerCase().includes('chittagong') || 
+                        formData.city.toLowerCase().includes('chittagong');
+    
+    if (isChittagong) return 0;
+    if (subtotal >= 1000) return 0;
+    return 50;
+  };
+
+  const deliveryCharge = calculateDeliveryCharge();
+  const totalAmount = getTotalPrice() + deliveryCharge;
+
+  const paymentMethods = [
+    {
+      id: "cod",
+      name: "Cash on Delivery",
+      details: "Pay when you receive your materials. Available for physical delivery only."
+    },
+    {
+      id: "bkash",
+      name: "bKash",
+      details: "Send money to: 01XXXXXXXXX. Use your order number as reference."
+    },
+    {
+      id: "nagad",
+      name: "Nagad",
+      details: "Send money to: 01XXXXXXXXX. Use your order number as reference."
+    },
+    {
+      id: "bank",
+      name: "Bank Transfer",
+      details: "Account: 1234567890, Bank: ABC Bank Ltd. Include order number in description."
+    }
+  ];
+
+  const handlePaymentMethodSelect = (methodId: string) => {
+    setSelectedPaymentMethod(methodId);
+    setShowPaymentDetails(true);
+  };
+
+  const handleCompleteOrder = async () => {
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.address) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method",
         variant: "destructive"
       });
       return;
@@ -53,16 +107,25 @@ const Checkout = () => {
       // Simulate processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      toast({
-        title: "Order Placed Successfully!",
-        description: "You will receive your materials via email shortly",
+      // Navigate to success page with order data
+      navigate('/success-page', {
+        state: {
+          orderData: {
+            items,
+            customerInfo: formData,
+            paymentMethod: paymentMethods.find(p => p.id === selectedPaymentMethod)?.name,
+            subtotal: getTotalPrice(),
+            deliveryCharge,
+            total: totalAmount,
+            orderNumber: `ORD-${Date.now()}`
+          }
+        }
       });
       
       clearCart();
-      navigate('/payment-success');
     } catch (error) {
       toast({
-        title: "Payment Failed",
+        title: "Order Failed",
         description: "Please try again or contact support",
         variant: "destructive"
       });
@@ -97,16 +160,15 @@ const Checkout = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
+        <div className="flex items-center gap-4 mb-6">
+          <button 
             onClick={() => navigate(-1)}
-            className="p-2"
+            className="p-2 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5" />
-          </Button>
+          </button>
           <div>
             <h1 className="font-display font-bold text-3xl text-foreground">
               Checkout
@@ -118,19 +180,20 @@ const Checkout = () => {
         </div>
 
         {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column - Order Summary */}
           <div className="lg:col-span-4">
-            <div className="bg-card rounded-xl border border-border p-6 shadow-card sticky top-24">
-              <h2 className="font-display font-semibold text-xl mb-6">
+            <div className="sticky top-24 space-y-4">
+              <h2 className="font-display font-semibold text-xl mb-4">
                 Order Summary
               </h2>
               
-              <div className="space-y-4 mb-6 max-h-80 overflow-y-auto">
+              {/* Items List - Reduced padding, no boxes */}
+              <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                  <div key={item.id} className="flex items-start gap-3 py-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-card-foreground truncate">
+                      <p className="font-medium text-sm text-foreground">
                         {item.code}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -140,30 +203,42 @@ const Checkout = () => {
                         ৳{item.price}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
                       onClick={() => handleRemoveItem(item.id)}
-                      className="text-muted-foreground hover:text-destructive p-1"
+                      className="p-1 bg-red-100 border-2 border-red-500 shadow-[2px_2px_0px_0px_rgba(239,68,68,1)] hover:shadow-[1px_1px_0px_0px_rgba(239,68,68,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 rounded text-red-600"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </button>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-border pt-4 space-y-2">
+              {/* Delivery Charge Section */}
+              <div className="space-y-2 py-4 border-t border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Truck className="w-4 h-4 text-primary" />
+                  <span className="font-medium text-sm">Delivery Information</span>
+                </div>
                 <div className="flex justify-between text-sm">
                   <span>Subtotal ({items.length} items)</span>
                   <span>৳{getTotalPrice()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Digital Delivery</span>
-                  <span className="text-success">Free</span>
+                  <span>Delivery Charge</span>
+                  <span className={deliveryCharge === 0 ? "text-green-600" : "text-foreground"}>
+                    {deliveryCharge === 0 ? "Free" : `৳${deliveryCharge}`}
+                  </span>
                 </div>
+                {deliveryCharge === 0 && (
+                  <p className="text-xs text-green-600">
+                    {formData.address.toLowerCase().includes('chittagong') || formData.city.toLowerCase().includes('chittagong') 
+                      ? "Free delivery in Chittagong!" 
+                      : "Free delivery for orders above ৳1000!"}
+                  </p>
+                )}
                 <div className="flex justify-between font-display font-bold text-lg border-t border-border pt-2">
                   <span>Total</span>
-                  <span className="text-primary">৳{getTotalPrice()}</span>
+                  <span className="text-primary">৳{totalAmount}</span>
                 </div>
               </div>
             </div>
@@ -171,120 +246,143 @@ const Checkout = () => {
 
           {/* Middle Column - Customer Details */}
           <div className="lg:col-span-4">
-            <div className="bg-card rounded-xl border border-border p-6 shadow-card">
-              <h2 className="font-display font-semibold text-xl mb-6">
-                Customer Information
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="fullName">Full Name *</Label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="your.email@example.com"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+880 1XX XXX XXXX"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="country">Country</Label>
-                  <select
-                    id="country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="Bangladesh">Bangladesh</option>
-                    <option value="India">India</option>
-                    <option value="Pakistan">Pakistan</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+            <h2 className="font-display font-semibold text-xl mb-4">
+              Customer Information
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="fullName" className="text-sm font-medium mb-1 block">Full Name *</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  placeholder="Enter your full name"
+                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+                  required
+                />
               </div>
-
-              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                <h3 className="font-medium text-primary mb-2">Delivery Method</h3>
-                <p className="text-sm text-primary/80">
-                  Digital download - Materials will be sent to your email instantly after payment
-                </p>
+              
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium mb-1 block">Email Address *</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="your.email@example.com"
+                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium mb-1 block">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="+880 1XX XXX XXXX"
+                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="address" className="text-sm font-medium mb-1 block">Address *</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Enter your full address"
+                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="city" className="text-sm font-medium mb-1 block">City *</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Enter your city"
+                  className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-150"
+                  required
+                />
               </div>
             </div>
           </div>
 
           {/* Right Column - Payment */}
           <div className="lg:col-span-4">
-            <div className="bg-card rounded-xl border border-border p-6 shadow-card">
-              <h2 className="font-display font-semibold text-xl mb-6">
-                Payment & Confirmation
-              </h2>
-              
-              <div className="space-y-4 mb-6">
-                <div className="p-4 border border-border rounded-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    <span className="font-medium">Secure Payment</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Your payment information is encrypted and secure
-                  </p>
+            <h2 className="font-display font-semibold text-xl mb-4">
+              Payment & Confirmation
+            </h2>
+            
+            {/* Payment Methods */}
+            <div className="space-y-3 mb-6">
+              {paymentMethods.map((method) => (
+                <div key={method.id}>
+                  <button
+                    onClick={() => handlePaymentMethodSelect(method.id)}
+                    className={`w-full p-4 text-left border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 rounded-lg font-medium ${
+                      selectedPaymentMethod === method.id 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-white text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{method.name}</span>
+                      {selectedPaymentMethod === method.id && showPaymentDetails ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </div>
+                  </button>
+                  
+                  {/* Payment Details */}
+                  {selectedPaymentMethod === method.id && showPaymentDetails && (
+                    <div className="mt-2 p-3 bg-gray-50 border-2 border-gray-300 rounded-lg">
+                      <p className="text-sm text-gray-700">{method.details}</p>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Shield className="w-4 h-4" />
-                  <span>SSL Encrypted • Secure Processing</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleCheckout}
-                disabled={isProcessing}
-                className="w-full bg-gradient-primary hover:opacity-90 text-white font-medium"
-                size="lg"
-              >
-                {isProcessing ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Complete Order - ৳{getTotalPrice()}
-                  </>
-                )}
-              </Button>
-
-              <p className="text-xs text-muted-foreground text-center mt-4">
-                By completing your order, you agree to our Terms of Service and Privacy Policy
-              </p>
+              ))}
             </div>
+
+            {/* Security Info */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+              <Shield className="w-4 h-4" />
+              <span>SSL Encrypted • Secure Processing</span>
+            </div>
+
+            {/* Complete Order Button */}
+            <button
+              onClick={handleCompleteOrder}
+              disabled={isProcessing}
+              className="w-full p-4 bg-green-400 border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] transition-all duration-150 rounded-lg font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                "Processing..."
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4 mr-2 inline" />
+                  Complete Order - ৳{totalAmount}
+                </>
+              )}
+            </button>
+
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              By completing your order, you agree to our Terms of Service and Privacy Policy
+            </p>
           </div>
         </div>
       </div>
