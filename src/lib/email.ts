@@ -1,6 +1,11 @@
-import { Resend } from 'resend';
+// Note: In production, email sending should be done server-side
+// For now, we'll use fetch to call Resend API directly
 
-const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+if (!RESEND_API_KEY) {
+  console.warn('VITE_RESEND_API_KEY not found in environment variables');
+}
 
 export interface OrderEmailData {
   orderNumber: string;
