@@ -95,3 +95,87 @@ ${itemsList}
     return { success: false, error };
   }
 }
+
+// Send customer order confirmation email
+export async function sendCustomerOrderConfirmation(orderData: OrderEmailData) {
+  if (!RESEND_API_KEY) {
+    console.error('VITE_RESEND_API_KEY not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  try {
+    console.log('Sending customer confirmation email to:', orderData.customerEmail);
+
+    const itemsList = orderData.items.map(item => 
+      `• ${item.item_code} - ${item.subject} (${item.board} ${item.level}) - ৳${item.price}`
+    ).join('\n');
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'EduMaterials <onboarding@resend.dev>',
+        to: [orderData.customerEmail],
+        subject: `✅ Order Confirmed: ${orderData.orderNumber}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #10b981, #3b82f6); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">✅ Order Confirmed!</h1>
+              <p style="color: white; margin: 10px 0 0 0;">Thank you for your order, ${orderData.customerName}!</p>
+            </div>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Order Details</h2>
+              <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+              <p><strong>Total Amount:</strong> ৳${orderData.totalAmount}</p>
+              <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Your Items</h2>
+              <div style="font-family: monospace; white-space: pre-line; background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #10b981;">
+${itemsList}
+              </div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Delivery Information</h2>
+              <p><strong>Address:</strong> ${orderData.customerAddress}, ${orderData.customerCity}</p>
+              <p><strong>Phone:</strong> ${orderData.customerPhone}</p>
+              <p style="color: #059669; font-weight: bold;">📦 Your order will be delivered within 2-3 business days</p>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Order Summary</h2>
+              <p><strong>Subtotal:</strong> ৳${orderData.subtotal}</p>
+              <p><strong>Delivery Charge:</strong> ${orderData.deliveryCharge === 0 ? 'Free' : `৳${orderData.deliveryCharge}`}</p>
+              <p style="font-size: 18px; color: #10b981;"><strong>Total: ৳${orderData.totalAmount}</strong></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #ecfdf5; border-radius: 8px;">
+              <p style="margin: 0; color: #059669;">
+                📧 Thank you for choosing EduMaterials! We'll notify you when your order ships.
+              </p>
+            </div>
+          </div>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Resend API error:', response.status, errorText);
+      throw new Error(`Resend API error: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Customer confirmation email sent successfully:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send customer confirmation:', error);
+    return { success: false, error };
+  }
+}
