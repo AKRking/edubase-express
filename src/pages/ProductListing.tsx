@@ -248,19 +248,10 @@ const ProductListing = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column - Sticky */}
           <div className="lg:col-span-4">
-            <div className="sticky top-24 space-y-8">
+            <div className="sticky top-24">
               {/* Product Gallery */}
               <div>
                 <ProductGallery categoryInfo={categoryInfo} />
-              </div>
-
-              {/* Subject Filter */}
-              <div>
-                <SubjectFilter
-                  subjects={subjectOptions}
-                  selectedSubject={selectedSubject}
-                  onSubjectSelect={setSelectedSubject}
-                />
               </div>
             </div>
           </div>
@@ -283,6 +274,15 @@ const ProductListing = () => {
                   </span>
                 )}
               </p>
+            </div>
+
+            {/* Subject Filter - Moved to top */}
+            <div className="mb-6">
+              <SubjectFilter
+                subjects={subjectOptions}
+                selectedSubject={selectedSubject}
+                onSubjectSelect={setSelectedSubject}
+              />
             </div>
 
             {/* Subject Cards */}
