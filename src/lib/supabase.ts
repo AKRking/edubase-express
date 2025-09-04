@@ -119,10 +119,14 @@ export async function createOrder(orderData: {
 
     // Send email notifications (don't block order creation if emails fail)
     try {
-      await Promise.all([
-        sendAdminOrderNotification(emailData),
-        sendCustomerOrderConfirmation(emailData)
-      ]);
+      console.log('Sending email notifications...');
+      
+      const adminResult = await sendAdminOrderNotification(emailData);
+      const customerResult = await sendCustomerOrderConfirmation(emailData);
+      
+      console.log('Admin email result:', adminResult);
+      console.log('Customer email result:', customerResult);
+      
     } catch (emailError) {
       console.error('Email notifications failed:', emailError);
       // Continue with order creation even if emails fail
