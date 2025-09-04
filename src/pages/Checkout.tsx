@@ -8,7 +8,7 @@ import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, Chev
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+//jy
 const Checkout = () => {
   const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
