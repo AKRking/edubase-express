@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import { useCart } from "@/contexts/CartContext";
+import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, removeItem, getTotalPrice, clearCart } = useCart();
+  const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+  const clearCart = useCartStore((state) => state.clearCart);
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");

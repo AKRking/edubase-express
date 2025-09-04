@@ -1,9 +1,9 @@
 import { BookOpen, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useCartStore } from "@/stores/cartStore";
 
 const Header = () => {
-  const { getTotalItems } = useCart();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

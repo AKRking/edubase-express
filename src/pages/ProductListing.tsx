@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import ProductGallery from "@/components/ProductGallery";
 import SubjectFilter from "@/components/SubjectFilter";
-import { useCart, CartItem } from "@/contexts/CartContext";
+import { useCartStore, CartItem } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronRight, Star, ArrowLeft, ShoppingCart, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -125,7 +125,7 @@ const mockSubjects: Subject[] = [
 const ProductListing = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addItems } = useCart();
+  const addItems = useCartStore((state) => state.addItems);
   const { toast } = useToast();
   const [selectedPapers, setSelectedPapers] = useState<Paper[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
