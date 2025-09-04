@@ -195,10 +195,10 @@ const ProductListing = () => {
     addItems(cartItems);
 
     // Show success toast
-    toast({
-      title: "Added to Cart!",
-      description: `${selectedPapers.length} item${selectedPapers.length > 1 ? 's' : ''} added successfully`,
-    });
+    // toast({
+    //   title: "Added to Cart!",
+    //   description: `${selectedPapers.length} item${selectedPapers.length > 1 ? 's' : ''} added successfully`,
+    // });
 
     // Clear current selection
     setSelectedPapers([]);
@@ -394,7 +394,7 @@ const ProductListing = () => {
       {showCheckoutButton && (
         <div className="fixed bottom-6 right-6 bg-warning rounded-xl border border-warning/20 shadow-card-lg p-6 max-w-sm z-50 animate-in slide-in-from-bottom-4 duration-300">
           <div className="text-center space-y-4">
-            <div className="w-12 h-12 bg-warning/10 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-12 h-12  rounded-full flex items-center justify-center mx-auto">
               <CreditCard className="w-6 h-6 text-warning-foreground" />
             </div>
             <div>
@@ -408,7 +408,7 @@ const ProductListing = () => {
             <div className="space-y-2">
               <Button 
                 onClick={handleGoToCheckout}
-                className="w-full bg-warning hover:bg-warning/90 text-warning-foreground font-medium"
+                className="w-full bg-blue-10 hover:bg-warning/90 text-warning-foreground font-medium"
                 size="lg"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
