@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation, type OrderEmailData } from './email';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -99,6 +100,32 @@ export async function createOrder(orderData: {
 
     if (orderError) {
       throw orderError;
+    }
+
+    // Prepare email data
+    const emailData: OrderEmailData = {
+      orderNumber: orderData.orderNumber,
+      customerName: orderData.customerInfo.fullName,
+      customerEmail: orderData.customerInfo.email,
+      customerPhone: orderData.customerInfo.phone,
+      customerAddress: orderData.customerInfo.address,
+      customerCity: orderData.customerInfo.city,
+      paymentMethod: orderData.paymentMethod,
+      subtotal: orderData.subtotal,
+      deliveryCharge: orderData.deliveryCharge,
+      totalAmount: orderData.totalAmount,
+      items: orderItemsJson
+    };
+
+    // Send email notifications (don't block order creation if emails fail)
+    try {
+      await Promise.all([
+        sendAdminOrderNotification(emailData),
+        sendCustomerOrderConfirmation(emailData)
+      ]);
+    } catch (emailError) {
+      console.error('Email notifications failed:', emailError);
+      // Continue with order creation even if emails fail
     }
 
     return { success: true, order };
