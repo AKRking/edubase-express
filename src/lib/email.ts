@@ -1,9 +1,11 @@
+// Note: In production, email sending should be done server-side
+// For now, we'll use fetch to call Resend API directly
 import { Resend } from 'resend';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
 
 if (!RESEND_API_KEY) {
-  console.warn('RESEND_API_KEY not found in environment variables');
+  console.warn('VITE_RESEND_API_KEY not found in environment variables');
 }
 
 const resend = new Resend(RESEND_API_KEY);
@@ -34,7 +36,7 @@ export interface OrderEmailData {
 // Send admin notification email
 export async function sendAdminOrderNotification(orderData: OrderEmailData) {
   if (!RESEND_API_KEY) {
-    console.error('RESEND_API_KEY not configured');
+    console.error('VITE_RESEND_API_KEY not configured');
     return { success: false, error: 'Email service not configured' };
   }
 
@@ -47,7 +49,7 @@ export async function sendAdminOrderNotification(orderData: OrderEmailData) {
 
     const { data, error } = await resend.emails.send({
       from: 'EduMaterials <onboarding@resend.dev>',
-      to: ['djbxo9@gmail.com'],
+      to: ['djbox9@gmail.com'],
       subject: `🔔 New Order: ${orderData.orderNumber}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -108,7 +110,7 @@ ${itemsList}
 // Send customer order confirmation email
 export async function sendCustomerOrderConfirmation(orderData: OrderEmailData) {
   if (!RESEND_API_KEY) {
-    console.error('RESEND_API_KEY not configured');
+    console.error('VITE_RESEND_API_KEY not configured');
     return { success: false, error: 'Email service not configured' };
   }
 
