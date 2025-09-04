@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 import { createOrder } from "@/lib/supabase";
+import { sendAdminOrderNotification, sendCustomerOrderConfirmation } from "@/lib/email";
 import { ArrowLeft, CreditCard, Shield, Trash2, Truck, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,6 +138,60 @@ const Checkout = () => {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to create order');
       }
+
+      // Send email notifications
+      console.log('Order created successfully, sending email notifications...');
+      
+      // Prepare email data
+      const emailData = {
+        orderNumber: orderData.orderNumber,
+        customerName: orderData.customerInfo.fullName,
+        customerEmail: orderData.customerInfo.email,
+        customerPhone: orderData.customerInfo.phone,
+        customerAddress: orderData.customerInfo.address,
+        customerCity: orderData.customerInfo.city,
+        paymentMethod: orderData.paymentMethod,
+        subtotal: orderData.subtotal,
+        deliveryCharge: orderData.deliveryCharge,
+        totalAmount: orderData.totalAmount,
+        items: orderData.items
+      };
+
+      // Send admin notification (non-blocking)
+      sendAdminOrderNotification(emailData).then(result => {
+        if (result.success) {
+          console.log('Admin notification sent successfully');
+        } else {
+          console.error('Failed to send admin notification:', result.error);
+        }
+      }).catch(error => {
+        console.error('Admin notification error:', error);
+      });
+
+      // Send customer confirmation (non-blocking)
+      sendCustomerOrderConfirmation(emailData).then(result => {
+        if (result.success) {
+          console.log('Customer confirmation sent successfully');
+          toast({
+            title: "Confirmation Email Sent",
+            description: "Check your email for order details",
+          });
+        } else {
+          console.error('Failed to send customer confirmation:', result.error);
+          toast({
+            title: "Email Warning",
+            description: "Order created but confirmation email failed. Please save your order number.",
+            variant: "destructive"
+          });
+        }
+      }).catch(error => {
+        console.error('Customer confirmation error:', error);
+        toast({
+          title: "Email Warning", 
+          description: "Order created but confirmation email failed. Please save your order number.",
+          variant: "destructive"
+        });
+      });
 
       // Show success toast
       toast({
